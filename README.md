@@ -11,7 +11,6 @@ const PersonStruct = grechabuf.createStruct({
     ),
     health: grechabuf.i8(),
     food: grechabuf.i8(),
-
     lostBrainCells: grechabuf.u32(),
 })
 
@@ -19,9 +18,8 @@ const PersonStruct = grechabuf.createStruct({
 const buffer = PersonStruct.serialize({
     name: "John Doe",
     roles: ["Admin", "TsodingSessionsEnjoyer"],
-    health: 1,
-    food: 1,
-    moving: 1,
+    health: 100,
+    food: 77,
     lostBrainCells: 69420
 })
 ```
