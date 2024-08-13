@@ -4,7 +4,7 @@ const grechabuf = require("..")
 const vector2 = () => {
     /** @type {grechabuf.Field<{x: number, y: number}>} */
     return {
-        size(_view, _position) {
+        size(value) {
             return 4 + 4
         },
         serialize(view, position, value) {
@@ -32,19 +32,15 @@ const PlayerStruct = grechabuf.createStruct({
     position: vector2(),
 })
 
-// prepare ArrayBuffer & DataView
-const buffer = new ArrayBuffer(PlayerStruct.size() + 16)
-const dataView = new DataView(buffer)
-
 // serializing
-PlayerStruct.serialize(dataView, {
+const buffer = PlayerStruct.serialize({
     name: "John Doe",
     health: 100,
     food: 100,
-    position: { x: 7.5, y: 1.2 },
+    position: { x: 7.5, y: 1 },
 })
 console.log(buffer)
 
 // deserializing
-const data = PlayerStruct.deserialize(dataView)
+const data = PlayerStruct.deserialize(new DataView(buffer))
 console.log(data)

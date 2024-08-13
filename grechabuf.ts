@@ -5,14 +5,13 @@ export interface FieldSerializeResult<T> {
 
 export interface Field<T> {
     /**
-     * Apoximated bytes length
+     * Calculate byte size
      *
-     * @param view {DataView} data view
-     * @param position {number} AKA offset
+     * @param value {T} value
      *
      * @returns {number} minimal field length
      */
-    size(view?: DataView, position?: number): number
+    size(value: T): number
 
     /**
      * Serialize field
@@ -49,23 +48,39 @@ type InferFieldsValues<T extends Fields> = {
  */
 export interface Struct<F extends Fields> {
     /**
-     * Get size of buffer
+     * Calculate size of buffer
      *
-     * If `view` not passed, returns minimal required size of buffer (because strings have dynamic size)
-     *
-     * @returns {number} required size of buffer
+     * @returns {number} size of buffer
      */
-    size(view: DataView): number,
+    size(data: InferFieldsValues<F>): number,
 
     /**
-     * Serialize struct
+     * Serialize struct, returning with new ArrayBuffer
+     *
+     * @param data {InferFieldsValues<F>} data to serialize
+     *
+     * @returns {ArrayBuffer} serialized data
+     */
+    serialize(data: InferFieldsValues<F>): ArrayBuffer
+
+    /**
+     * Serialize struct into data view
      *
      * @param view {DataView} data view
      * @param data {InferFieldsValues<F>} data to serialize
      *
      * @returns {number} length of serialized data
      */
-    serialize(view: DataView, data: InferFieldsValues<F>): number
+    serializeInto(view: DataView, data: InferFieldsValues<F>): number
+
+    /**
+     * Deserialize struct from data view
+     *
+     * @param view {DataView} data view
+     * @param data {InferFieldsValues<F>} data to serialize
+     *
+     * @returns {number} length of serialized data
+     */
     deserialize(view: DataView, position?: number): InferFieldsValues<F>
 }
 
@@ -76,17 +91,29 @@ export interface Struct<F extends Fields> {
 */
 export function createStruct<F extends Fields>(fields: F): Struct<F> {
     return {
-        size(view?: DataView) {
+        size(data: InferFieldsValues<F>) {
             let size = 0
 
-            for (const [_fieldName, fieldType] of Object.entries(fields)) {
-                size += fieldType.size(view, size)
+            for (const [fieldName, fieldType] of Object.entries(fields)) {
+                size += fieldType.size(data[fieldName])
             }
 
             return size
         },
 
-        serialize(view: DataView, data: InferFieldsValues<F>, position = 0) {
+        serialize(data: InferFieldsValues<F>) {
+            const buffer = new ArrayBuffer(this.size(data))
+            const view = new DataView(buffer)
+
+            let position = 0
+            for (const [fieldName, fieldType] of Object.entries(fields)) {
+                position += fieldType.serialize(view, position, data[fieldName])
+            }
+
+            return buffer
+        },
+
+        serializeInto(view: DataView, data: InferFieldsValues<F>, position = 0) {
             const initialPosition = position;
 
             for (const [fieldName, fieldType] of Object.entries(fields)) {
@@ -116,7 +143,7 @@ export function createStruct<F extends Fields>(fields: F): Struct<F> {
 
 export const i8 = (): Field<number> => {
     return {
-        size(_view, _position): number {
+        size(_value): number {
             return 1
         },
         serialize(view, position, value) {
@@ -134,7 +161,7 @@ export const i8 = (): Field<number> => {
 
 export const u8 = (): Field<number> => {
     return {
-        size(_view, _position): number {
+        size(_value): number {
             return 1
         },
         serialize(view, position, value) {
@@ -152,7 +179,7 @@ export const u8 = (): Field<number> => {
 
 export const i16 = (): Field<number> => {
     return {
-        size(_view, _position): number {
+        size(_value): number {
             return 2
         },
         serialize(view, position, value) {
@@ -170,7 +197,7 @@ export const i16 = (): Field<number> => {
 
 export const u16 = (): Field<number> => {
     return {
-        size(_view, _position): number {
+        size(_value): number {
             return 2
         },
         serialize(view, position, value) {
@@ -188,7 +215,7 @@ export const u16 = (): Field<number> => {
 
 export const i32 = (): Field<number> => {
     return {
-        size(_view, _position): number {
+        size(_value): number {
             return 4
         },
         serialize(view, position, value) {
@@ -206,7 +233,7 @@ export const i32 = (): Field<number> => {
 
 export const u32 = (): Field<number> => {
     return {
-        size(_view, _position): number {
+        size(_value): number {
             return 4
         },
         serialize(view, position, value) {
@@ -224,7 +251,7 @@ export const u32 = (): Field<number> => {
 
 export const f32 = (): Field<number> => {
     return {
-        size(_view, _position): number {
+        size(_value): number {
             return 4
         },
         serialize(view, position, value) {
@@ -242,7 +269,7 @@ export const f32 = (): Field<number> => {
 
 export const f64 = (): Field<number> => {
     return {
-        size(_view, _position): number {
+        size(_value): number {
             return 4
         },
         serialize(view, position, value) {
@@ -267,12 +294,8 @@ export const f64 = (): Field<number> => {
  */
 export const string = (): Field<string> => {
     return {
-        size(view, position = 0): number {
-            if (view) {
-                return view.getUint8(position) + 1
-            } else {
-                return 1
-            }
+        size(value): number {
+            return value.length + 1
         },
 
         serialize(view, position, value) {
@@ -313,12 +336,8 @@ export const string = (): Field<string> => {
  */
 export const longString = (): Field<string> => {
     return {
-        size(view, position = 0): number {
-            if (view) {
-                return view.getUint16(position) + 1
-            } else {
-                return 1
-            }
+        size(value): number {
+            return value.length + 2
         },
 
         serialize(view, position, value) {
@@ -328,7 +347,7 @@ export const longString = (): Field<string> => {
                 .split("")
                 .map((_, i) => [i, value.charCodeAt(i)])
             for (const [offset, char] of chars) {
-                view.setUint8(position + offset + 1, char)
+                view.setUint8(position + offset + 2, char)
             }
 
             return value.length + 1
@@ -339,12 +358,12 @@ export const longString = (): Field<string> => {
             let chars = []
 
             for (let offset = 0; offset < length; offset++) {
-                chars.push(view.getUint8(position + offset + 1))
+                chars.push(view.getUint8(position + offset + 2))
             }
 
             return {
                 data: String.fromCodePoint(...chars),
-                length: length + 1
+                length: length + 2
             }
         }
     }
@@ -359,12 +378,8 @@ export const longString = (): Field<string> => {
  */
 export const array = <T>(type: Field<T>): Field<T[]> => {
     return {
-        size(view, position = 0) {
-            if (view) {
-                return type.size(view, position) + 1
-            } else {
-                return 1
-            }
+        size(value) {
+            return value.map((v) => type.size(v)).reduce((a, b) => a + b, 1)
         },
 
         serialize(view, position, array) {
@@ -391,7 +406,7 @@ export const array = <T>(type: Field<T>): Field<T[]> => {
 
             return {
                 data: array,
-                length: offset
+                length: offset + 1
             }
         }
     }
@@ -406,12 +421,8 @@ export const array = <T>(type: Field<T>): Field<T[]> => {
  */
 export const longArray = <T>(type: Field<T>): Field<T[]> => {
     return {
-        size(view, position = 0) {
-            if (view) {
-                return type.size(view, position) + 1
-            } else {
-                return 1
-            }
+        size(value) {
+            return value.map((v) => type.size(v)).reduce((a, b) => a + b, 2)
         },
 
         serialize(view, position, array) {
@@ -438,7 +449,7 @@ export const longArray = <T>(type: Field<T>): Field<T[]> => {
 
             return {
                 data: array,
-                length: offset
+                length: offset + 2
             }
         }
     }

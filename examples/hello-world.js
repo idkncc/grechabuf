@@ -7,17 +7,13 @@ const HelloWorldStruct = grechabuf.createStruct({
     food: grechabuf.i16(),
 })
 
-// prepare ArrayBuffer & DataView
-const buffer = new ArrayBuffer(HelloWorldStruct.size())
-const dataView = new DataView(buffer)
-
 // serializing
-HelloWorldStruct.serialize(dataView, {
+const buffer = HelloWorldStruct.serialize({
     health: 69,
     food: 420,
 })
 console.log(buffer)
 
 // deserializing
-const data = HelloWorldStruct.deserialize(dataView)
+const data = HelloWorldStruct.deserialize(new DataView(buffer))
 console.log(data)

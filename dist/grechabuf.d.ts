@@ -4,14 +4,13 @@ export interface FieldSerializeResult<T> {
 }
 export interface Field<T> {
     /**
-     * Apoximated bytes length
+     * Calculate byte size
      *
-     * @param view {DataView} data view
-     * @param position {number} AKA offset
+     * @param value {T} value
      *
      * @returns {number} minimal field length
      */
-    size(view?: DataView, position?: number): number;
+    size(value: T): number;
     /**
      * Serialize field
      *
@@ -43,22 +42,36 @@ type InferFieldsValues<T extends Fields> = {
  */
 export interface Struct<F extends Fields> {
     /**
-     * Get size of buffer
+     * Calculate size of buffer
      *
-     * If `view` not passed, returns minimal required size of buffer (because strings have dynamic size)
-     *
-     * @returns {number} required size of buffer
+     * @returns {number} size of buffer
      */
-    size(view: DataView): number;
+    size(data: InferFieldsValues<F>): number;
     /**
-     * Serialize struct
+     * Serialize struct, returning with new ArrayBuffer
+     *
+     * @param data {InferFieldsValues<F>} data to serialize
+     *
+     * @returns {ArrayBuffer} serialized data
+     */
+    serialize(data: InferFieldsValues<F>): ArrayBuffer;
+    /**
+     * Serialize struct into data view
      *
      * @param view {DataView} data view
      * @param data {InferFieldsValues<F>} data to serialize
      *
      * @returns {number} length of serialized data
      */
-    serialize(view: DataView, data: InferFieldsValues<F>): number;
+    serializeInto(view: DataView, data: InferFieldsValues<F>): number;
+    /**
+     * Deserialize struct from data view
+     *
+     * @param view {DataView} data view
+     * @param data {InferFieldsValues<F>} data to serialize
+     *
+     * @returns {number} length of serialized data
+     */
     deserialize(view: DataView, position?: number): InferFieldsValues<F>;
 }
 /**
