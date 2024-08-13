@@ -1,0 +1,27 @@
+{
+    "name": "grechabuf",
+    "version": "1.0.0",
+    "description": "Simplest binary packet serialization",
+    "main": "dist/grechabuf.min.cjs",
+    "module": "dist/grechabuf.min.mjs",
+    "types": "dist/grechabuf.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "rollup -c rollup.config.mjs"
+    },
+    "keywords": [
+        "binary",
+        "binary-serializer"
+    ],
+    "author": "Dmitry <@idkncc>",
+    "license": "MIT",
+    "devDependencies": {
+        "@rollup/plugin-terser": "^0.4.4",
+        "@rollup/plugin-typescript": "^11.1.6",
+        "rollup": "^4.19.0",
+        "tslib": "^2.6.3",
+        "typescript": "^5.5.4"
+    }
+}
