@@ -1,6 +1,6 @@
 # Grechabuf
 
-Binary data (de)serializer, highly enspired by [@tsoding's multiplayer prototype](https://github.com/tsoding/multiplayer-game-prototype)
+Binary data (de)serializer, highly inspired by [Tsoding's multiplayer prototype](https://github.com/tsoding/multiplayer-game-prototype)
 
 ## why didnt you use the Protobuf!???
  - Protobuf is bloated dependency
