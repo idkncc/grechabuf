@@ -73,6 +73,8 @@ export declare const i16: () => Field<number>;
 export declare const u16: () => Field<number>;
 export declare const i32: () => Field<number>;
 export declare const u32: () => Field<number>;
+export declare const f32: () => Field<number>;
+export declare const f64: () => Field<number>;
 /**
  * String field (dynamic)
  *
@@ -82,11 +84,27 @@ export declare const u32: () => Field<number>;
  */
 export declare const string: () => Field<string>;
 /**
- * Array field (dynamic)
+ * Long String field (dynamic)
  *
- * Up to 255 element long (for more use longArray)
+ * Up to 65536 characters long
  *
  * @returns {Field<string>}
  */
+export declare const longString: () => Field<string>;
+/**
+ * Array field (dynamic)
+ *
+ * Up to 255 element long
+ *
+ * @returns {Field<T>}
+ */
 export declare const array: <T>(type: Field<T>) => Field<T[]>;
+/**
+ * Long Array field (dynamic)
+ *
+ * Up to 65536 element long
+ *
+ * @returns {Field<T>}
+ */
+export declare const longArray: <T>(type: Field<T>) => Field<T[]>;
 export {};

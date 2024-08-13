@@ -222,6 +222,42 @@ export const u32 = (): Field<number> => {
     }
 }
 
+export const f32 = (): Field<number> => {
+    return {
+        size(_view, _position): number {
+            return 4
+        },
+        serialize(view, position, value) {
+            view.setFloat32(position, value)
+            return 4
+        },
+        deserialize(view, position) {
+            return {
+                data: view.getFloat32(position),
+                length: 4
+            }
+        }
+    }
+}
+
+export const f64 = (): Field<number> => {
+    return {
+        size(_view, _position): number {
+            return 4
+        },
+        serialize(view, position, value) {
+            view.setFloat64(position, value)
+            return 4
+        },
+        deserialize(view, position) {
+            return {
+                data: view.getFloat64(position),
+                length: 4
+            }
+        }
+    }
+}
+
 /**
  * String field (dynamic)
  *
@@ -269,11 +305,57 @@ export const string = (): Field<string> => {
 }
 
 /**
- * Array field (dynamic)
+ * Long String field (dynamic)
  *
- * Up to 255 element long (for more use longArray)
+ * Up to 65536 characters long
  *
  * @returns {Field<string>}
+ */
+export const longString = (): Field<string> => {
+    return {
+        size(view, position = 0): number {
+            if (view) {
+                return view.getUint16(position) + 1
+            } else {
+                return 1
+            }
+        },
+
+        serialize(view, position, value) {
+            view.setUint16(position, value.length)
+
+            const chars = value
+                .split("")
+                .map((_, i) => [i, value.charCodeAt(i)])
+            for (const [offset, char] of chars) {
+                view.setUint8(position + offset + 1, char)
+            }
+
+            return value.length + 1
+        },
+
+        deserialize(view, position) {
+            const length = view.getUint16(position)
+            let chars = []
+
+            for (let offset = 0; offset < length; offset++) {
+                chars.push(view.getUint8(position + offset + 1))
+            }
+
+            return {
+                data: String.fromCodePoint(...chars),
+                length: length + 1
+            }
+        }
+    }
+}
+
+/**
+ * Array field (dynamic)
+ *
+ * Up to 255 element long
+ *
+ * @returns {Field<T>}
  */
 export const array = <T>(type: Field<T>): Field<T[]> => {
     return {
@@ -298,6 +380,53 @@ export const array = <T>(type: Field<T>): Field<T[]> => {
 
         deserialize(view, position) {
             const length = view.getUint8(position)
+
+            let array = []
+            let offset = 0
+            for (let i = 0; i < length; i++) {
+                const { data, length } = type.deserialize(view, position + offset + 1)
+                array.push(data)
+                offset += length
+            }
+
+            return {
+                data: array,
+                length: offset
+            }
+        }
+    }
+}
+
+/**
+ * Long Array field (dynamic)
+ *
+ * Up to 65536 element long
+ *
+ * @returns {Field<T>}
+ */
+export const longArray = <T>(type: Field<T>): Field<T[]> => {
+    return {
+        size(view, position = 0) {
+            if (view) {
+                return type.size(view, position) + 1
+            } else {
+                return 1
+            }
+        },
+
+        serialize(view, position, array) {
+            view.setUint16(position, array.length)
+
+            let offset = 0
+            for (const value of array) {
+                offset += type.serialize(view, position + offset + 1, value)
+            }
+
+            return offset + 1
+        },
+
+        deserialize(view, position) {
+            const length = view.getUint16(position)
 
             let array = []
             let offset = 0
