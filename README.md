@@ -26,6 +26,7 @@ const buffer = PersonStruct.serialize({
 
 ## "why don't use my favourite Protobuf!?!??"
  - Protobuf is bloated dependency _(its like opening json in Visual Studio)_
+ - Grechabuf has no dependencies _(only `devDependencies` for building and testing)_
  - Grechabuf is singlefile .ts/.cjs/.mjs to use
  - Grechabuf is easy to expand [(see custom fields)](#custom-fields)
  - Grechabuf has TypeScript support

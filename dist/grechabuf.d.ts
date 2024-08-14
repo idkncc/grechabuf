@@ -88,6 +88,7 @@ export declare const i32: () => Field<number>;
 export declare const u32: () => Field<number>;
 export declare const f32: () => Field<number>;
 export declare const f64: () => Field<number>;
+export declare const bool: () => Field<boolean>;
 /**
  * String field (dynamic)
  *
