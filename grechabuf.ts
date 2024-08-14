@@ -285,6 +285,24 @@ export const f64 = (): Field<number> => {
     }
 }
 
+export const bool = (): Field<boolean> => {
+    return {
+        size(_value): number {
+            return 1
+        },
+        serialize(view, position, value) {
+            view.setUint8(position, value ? 0xFF : 0x00)
+            return 1
+        },
+        deserialize(view, position) {
+            return {
+                data: view.getUint8(position) > 0x55,
+                length: 1
+            }
+        }
+    }
+}
+
 /**
  * String field (dynamic)
  *
