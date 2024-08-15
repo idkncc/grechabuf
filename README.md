@@ -30,6 +30,7 @@ const buffer = PersonStruct.serialize({
  - Grechabuf is singlefile .ts/.cjs/.mjs to use
  - Grechabuf is easy to expand [(see custom fields)](#custom-fields)
  - Grechabuf has TypeScript support
+ - [See tests for more details](https://github.com/idkncc/grechabuf-vs-protobuf)
 
 ## installation
 - With NPM (with bundler on web)
